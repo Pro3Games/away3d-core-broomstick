@@ -8,7 +8,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.away3d</groupId>
 	<artifactId>away3d.core.broomstick</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>swc</packaging>
 	
 	<properties>
