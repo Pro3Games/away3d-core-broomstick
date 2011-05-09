@@ -7,6 +7,7 @@ package away3d.materials.passes
 	import away3d.core.managers.AGALProgram3DAssembler;
 	import away3d.errors.AbstractMethodError;
 	import away3d.lights.LightBase;
+	import away3d.materials.ColorMaterial;
 	import away3d.materials.MaterialBase;
 
 	import flash.display.BitmapData;
@@ -23,7 +24,7 @@ package away3d.materials.passes
 	 */
 	public class MaterialPassBase
 	{
-		private var _material : MaterialBase;
+		protected var _material : MaterialBase;
 		private var _animation : AnimationBase;
 
 		private var _program3Ds : Vector.<Program3D> = new Vector.<Program3D>(8);
@@ -238,6 +239,7 @@ package away3d.materials.passes
 			if (!_program3Ds[contextIndex]) {
 				initPass(context, contextIndex);
 			}
+
 			if (_programInvalids[contextIndex]) {
 				updateProgram(context, contextIndex);
 				_programInvalids[contextIndex] = false;
@@ -265,7 +267,7 @@ package away3d.materials.passes
 		 */
 		arcane function invalidateShaderProgram() : void
 		{
-			for (var i : int = 0; i < 8; ++i)
+			for (var i : uint = 0; i < 8; ++i)
 				_programInvalids[i] = true;
 		}
 
@@ -276,8 +278,7 @@ package away3d.materials.passes
 		 */
 		protected function updateProgram(context : Context3D, contextIndex : uint, polyOffsetReg : String = null) : void
 		{
-			var assembler : AGALProgram3DAssembler = AGALProgram3DAssembler.instance;
-			assembler.assemble(context, this, _animation, _program3Ds[contextIndex], polyOffsetReg);
+			AGALProgram3DAssembler.instance.assemble(context, this, _animation, _program3Ds[contextIndex], polyOffsetReg);
 		}
 
 		/**
