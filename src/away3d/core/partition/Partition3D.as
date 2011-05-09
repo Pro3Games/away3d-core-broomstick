@@ -15,7 +15,7 @@ package away3d.core.partition
 	{
 		private var _rootNode : NodeBase;
 		private var _updatesMade : Boolean;
-		private var _updatedEntityList : EntityNode;
+		private var _updateQueue : EntityNode;
 
 		/**
 		 * Creates a new Partition3D object.
@@ -47,9 +47,16 @@ package away3d.core.partition
 		{
 			var node : EntityNode = entity.getEntityPartitionNode();
 			// already marked to be updated
-			if (node._updateQueueNext) return;
-			node._updateQueueNext = _updatedEntityList;
-			_updatedEntityList = node;
+			var t : EntityNode = _updateQueue;
+
+			// if already marked for update
+			while (t) {
+				if (node == t) return;
+				t = t._updateQueueNext;
+			}
+
+			node._updateQueueNext = _updateQueue;
+			_updateQueue = node;
 			_updatesMade = true;
 		}
 
@@ -61,20 +68,24 @@ package away3d.core.partition
 		{
 			var node : EntityNode = entity.getEntityPartitionNode();
 			var t : EntityNode;
-			if (node) node.removeFromParent();
+
+			node.removeFromParent();
 
 			// remove from update list if it's in
-			if (node._updateQueueNext) {
-				if (node == _updatedEntityList)
-					_updatedEntityList = node._updateQueueNext;
-				else {
-					t = _updatedEntityList;
-					while (t && t._updateQueueNext != node) t = t._updateQueueNext;
-					if (t) t._updateQueueNext = node._updateQueueNext;
-				}
-
-				node._updateQueueNext = null;
+			if (node == _updateQueue)
+				_updateQueue = node._updateQueueNext;
+			else {
+				t = _updateQueue;
+				while (t && t._updateQueueNext != node)
+					t = t._updateQueueNext;
+				if (t)
+					t._updateQueueNext = node._updateQueueNext;
 			}
+
+			node._updateQueueNext = null;
+
+			// any updates have been made undone
+			if (!_updateQueue) _updatesMade = false;
 		}
 
 		/**
@@ -82,7 +93,7 @@ package away3d.core.partition
 		 */
 		private function updateEntities() : void
 		{
-			var node : EntityNode = _updatedEntityList;
+			var node : EntityNode = _updateQueue;
 			var targetNode : NodeBase;
 			var t : EntityNode;
 
@@ -98,7 +109,7 @@ package away3d.core.partition
 				node._updateQueueNext = null;
 			} while (node = t);
 
-			_updatedEntityList = null;
+			_updateQueue = null;
 			_updatesMade = false;
 		}
 	}

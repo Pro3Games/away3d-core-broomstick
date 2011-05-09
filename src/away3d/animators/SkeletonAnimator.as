@@ -1,61 +1,33 @@
 package away3d.animators
 {
-	import away3d.arcane;
-
-	import flash.geom.Vector3D;
-	import away3d.animators.skeleton.SkeletonTimelineClipNode;
-	import away3d.animators.skeleton.SkeletonTreeNode;
 	import away3d.animators.data.SkeletonAnimationSequence;
 	import away3d.animators.data.SkeletonAnimationState;
-	import away3d.animators.data.AnimationSequenceBase;
-	import away3d.animators.data.AnimationStateBase;
+	import away3d.animators.skeleton.SkeletonTimelineClipNode;
+	import away3d.animators.skeleton.SkeletonTreeNode;
+	import away3d.arcane;
 
 	use namespace arcane;
 
 	/**
 	 * AnimationSequenceController provides a controller for single clip-based animation sequences (fe: md2, md5anim).
 	 */
-	public class SkeletonAnimator extends AnimatorBase
+	public class SkeletonAnimator extends SkeletonAnimatorBase
 	{
 		private var _sequences : Array;
-		private var _activeClip : SkeletonTimelineClipNode;
-		private var _sequenceAbsent : String;
-		private var _timeScale : Number = 1;
-		private var _updateRootPosition : Boolean = true;
+		private var _clipNode : SkeletonTimelineClipNode;
 
 		/**
 		 * Creates a new AnimationSequenceController object.
 		 */
-		public function SkeletonAnimator()
+		public function SkeletonAnimator(target : SkeletonAnimationState)
 		{
+			super(target);
 			_sequences = [];
 		}
 
-        public function get rootDelta() : Vector3D
-        {
-            return SkeletonAnimationState(_animationState).blendTree.rootDelta;
-        }
-
-		public function get updateRootPosition() : Boolean
+		override protected function createBlendTree() : SkeletonTreeNode
 		{
-			return _updateRootPosition;
-		}
-
-		public function set updateRootPosition(value : Boolean) : void
-		{
-			_updateRootPosition = value;
-		}
-
-		/**
-		 * @inheritDoc
-		 */
-		override public function set animationState(value : AnimationStateBase) : void
-		{
-			var state : SkeletonAnimationState = SkeletonAnimationState(value);
-			super.animationState = value;
-
-			if (state.numJoints > 0)
-				state.blendTree = (_activeClip ||= new SkeletonTimelineClipNode(state.numJoints));
+			return _clipNode = new SkeletonTimelineClipNode();
 		}
 
 		/**
@@ -64,34 +36,14 @@ package away3d.animators
 		 */
 		public function play(sequenceName : String) : void
 		{
-			var state : SkeletonAnimationState = SkeletonAnimationState(_animationState);
-			if (state && state.numJoints > 0) {
-				_activeClip ||= new SkeletonTimelineClipNode(state.numJoints);
-				_activeClip.clip = _sequences[sequenceName];
-			}
+			_clipNode.clip = _sequences[sequenceName];
 
-			if (!(_activeClip && _activeClip.clip)) {
-				_sequenceAbsent = sequenceName;
-			}
-			else {
-				_sequenceAbsent = null;
-				_activeClip.time = 0;
-			}
+			if (!_clipNode.clip)
+				throw new Error("Clip not found!");
+
+			_clipNode.time = 0;
 
 			start();
-		}
-
-		/**
-		 * The amount by which passed time should be scaled. Used to slow down or speed up animations.
-		 */
-		public function get timeScale() : Number
-		{
-			return _timeScale;
-		}
-
-		public function set timeScale(value : Number) : void
-		{
-			_timeScale = value;
 		}
 
 		/**
@@ -104,58 +56,21 @@ package away3d.animators
 
 		/**
 		 * @inheritDoc
-		 */
-		override public function clone() : AnimatorBase
-		{
-			var clone : SkeletonAnimator = new SkeletonAnimator();
-
-			clone._sequences = _sequences;
-
-			return clone;
-		}
-
-		/**
-		 * @inheritDoc
 		 * @private
-		 *
-		 * todo: remove animationState reference, change target to something "IAnimatable" that provides the state?
 		 */
-		override arcane function updateAnimation(dt : uint) : void
+		override protected function updateAnimation(realDT : Number, scaledDT : Number) : void
 		{
-			var blendTree : SkeletonTreeNode;
-			var delta : Vector3D;
-
-			// keep trying to play
-			if (_sequenceAbsent)
-				play(_sequenceAbsent);
-
-			if (_activeClip && _activeClip.clip && _activeClip.clip.duration > 0) {
-				blendTree = SkeletonAnimationState(_animationState).blendTree;
-				_activeClip.time += dt/_activeClip.clip.duration*_timeScale;
-				_animationState.invalidateState();
-				blendTree.updatePositionData();
-				if (_updateRootPosition) {
-					delta = blendTree.rootDelta;
-
-					var dist : Number = delta.length;
-					var len : uint;
-
-					if (dist > 0) {
-						len = _targets.length;
-						for (var i : uint = 0; i < len; ++i)
-							_targets[i].translateLocal(delta, dist);
-					}
-				}
-			}
+			_clipNode.time += scaledDT / _clipNode.clip.duration;
+			super.updateAnimation(realDT, scaledDT);
 		}
 
 		/**
 		 * Retrieves a sequence with a given name.
 		 * @private
 		 */
-		arcane function getSequence(sequenceName : String) : AnimationSequenceBase
+		/*arcane function getSequence(sequenceName : String) : AnimationSequenceBase
 		{
 			return _sequences[sequenceName];
-		}
+		 } */
 	}
 }

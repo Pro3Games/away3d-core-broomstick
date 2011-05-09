@@ -6,11 +6,12 @@ package away3d.core.managers
 	import away3d.core.base.Object3D;
 	import away3d.core.render.HitTestRenderer;
 	import away3d.core.traverse.EntityCollector;
-	import away3d.events.MouseEvent3D;
 	import away3d.entities.Entity;
-
+	import away3d.events.MouseEvent3D;
+	
 	import flash.display.Stage;
 	import flash.events.MouseEvent;
+	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
 
 	use namespace arcane;
@@ -26,6 +27,8 @@ package away3d.core.managers
 		private var _previousActiveRenderable : IRenderable;
 		private var _activeObject : Entity;
 		private var _activeRenderable : IRenderable;
+		private var _lastmove_mouseX:Number;
+		private var _lastmove_mouseY:Number;
 
 		private var _stage : Stage;
 		private var _hitTestRenderer : HitTestRenderer;
@@ -57,7 +60,7 @@ package away3d.core.managers
 			_stage.addEventListener(MouseEvent.CLICK, onClick);
 			_stage.addEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
 			_stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			_stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false, 1);	// mark moves as most important
+			//_stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false, 1);	// mark moves as most important
 			_stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 			_stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 		}
@@ -70,9 +73,16 @@ package away3d.core.managers
 			_stage.removeEventListener(MouseEvent.CLICK, onClick);
 			_stage.removeEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
 			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			_stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 			_stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 			_stage.removeEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+		}
+
+		private function mouseInView() : Boolean
+		{
+			var mx : Number = _view.mouseX;
+			var my : Number = _view.mouseY;
+
+			return mx >= 0 && my >= 0 && mx < _view.width && my < _view.height;
 		}
 
 		/**
@@ -80,6 +90,7 @@ package away3d.core.managers
 		 */
 		private function onClick(event : MouseEvent) : void
 		{
+			if (!mouseInView()) return;
 			// todo: implement invalidation and only rerender if view is invalid?
 			getObjectHitData();
 			if (_activeRenderable) dispatch(_mouseClick, event, _activeRenderable);
@@ -90,6 +101,7 @@ package away3d.core.managers
 		 */
 		private function onDoubleClick(event : MouseEvent) : void
 		{
+			if (!mouseInView()) return;
 			getObjectHitData();
 			if (_activeRenderable) dispatch(_mouseDoubleClick, event, _activeRenderable);
 		}
@@ -99,24 +111,9 @@ package away3d.core.managers
 		 */
 		private function onMouseDown(event : MouseEvent) : void
 		{
+			if (!mouseInView()) return;
 			getObjectHitData();
 			if (_activeRenderable) dispatch(_mouseDown, event, _activeRenderable);
-		}
-
-		/**
-		 * Called when a mouseMove event occurs on the stage
-		 */
-		private function onMouseMove(event : MouseEvent) : void
-		{
-			getObjectHitData();
-
-			if (_activeObject == _previousActiveObject) {
-				if (_activeRenderable) dispatch(_mouseMove, event, _activeRenderable);
-			}
-			else {
-				if (_previousActiveRenderable) dispatch(_mouseOut, event, _previousActiveRenderable);
-				if (_activeRenderable) dispatch(_mouseOver, event, _activeRenderable);
-			}
 		}
 
 		/**
@@ -124,6 +121,7 @@ package away3d.core.managers
 		 */
 		private function onMouseUp(event : MouseEvent) : void
 		{
+			if (!mouseInView()) return;
 			getObjectHitData();
 			dispatch(_mouseUp, event, _activeRenderable);
 		}
@@ -133,6 +131,7 @@ package away3d.core.managers
 		 */
 		private function onMouseWheel(event : MouseEvent) : void
 		{
+			if (!mouseInView()) return;
 			getObjectHitData();
 			if (_activeRenderable) dispatch(_mouseWheel, event, _activeRenderable);
 		}
@@ -150,7 +149,7 @@ package away3d.core.managers
 			// todo: would it be faster to run a custom ray-intersect collector instead of using entity collector's data?
 			// todo: shouldn't render it every time, only when invalidated (on move or view render)
 			if (collector.numMouseEnableds > 0) {
-				_hitTestRenderer.update(_stage.mouseX/_stage.stageWidth, _stage.mouseY/_stage.stageHeight, collector);
+				_hitTestRenderer.update((_view.mouseX-_view.x)/_view.width, (_view.mouseY-_view.y)/_view.height, collector);
 				_activeRenderable = _hitTestRenderer.hitRenderable;
 				_activeObject = (_activeRenderable && _activeRenderable.mouseEnabled)? _activeRenderable.sourceEntity : null;
 			}
@@ -178,8 +177,8 @@ package away3d.core.managers
 			event3D.object = renderable.sourceEntity;
 			event3D.renderable = renderable;
 			event3D.delta = sourceEvent.delta;
-			event3D.screenX = sourceEvent.stageX;
-			event3D.screenY = sourceEvent.stageY;
+			event3D.screenX = _view.stage.mouseX;
+			event3D.screenY = _view.stage.mouseY;
 
 			if (renderable.mouseDetails && local) {
 				event3D.uv = _hitTestRenderer.hitUV;
@@ -195,6 +194,34 @@ package away3d.core.managers
 			}
 
 			renderable.sourceEntity.dispatchEvent(event3D);
+		}
+		
+		/**
+		 * Manually fires a mouseMove3D event.
+		 */
+		public function fireMouseMoveEvent(force:Boolean = false):void
+		{
+			if (!mouseInView()) return;
+			
+			getObjectHitData();
+			
+			var _mouseMoveEvent:MouseEvent = new MouseEvent(MouseEvent.MOUSE_MOVE);
+			var _mouseX:Number = _mouseMoveEvent.localX = _view.mouseX;
+			var _mouseY:Number = _mouseMoveEvent.localY = _view.mouseY;
+			
+			if (!(_view.mouseZeroMove || force))
+				if ((_mouseX == _lastmove_mouseX) && (_mouseY == _lastmove_mouseY))
+					return;
+			
+			if (_activeObject == _previousActiveObject) {
+				if (_activeRenderable) dispatch(_mouseMove, _mouseMoveEvent, _activeRenderable);
+			} else {
+				if (_previousActiveRenderable) dispatch(_mouseOut, _mouseMoveEvent, _previousActiveRenderable);
+				if (_activeRenderable) dispatch(_mouseOver, _mouseMoveEvent, _activeRenderable);
+			}
+			
+			_lastmove_mouseX = _mouseX;
+			_lastmove_mouseY = _mouseY;
 		}
 	}
 }
