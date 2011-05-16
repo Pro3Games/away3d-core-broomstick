@@ -1,34 +1,39 @@
 package away3d.tools.serialize
 {
+	import away3d.animators.data.AnimationBase;
+	import away3d.animators.data.AnimationStateBase;
 	import away3d.animators.data.SkeletonAnimationSequence;
 	import away3d.animators.skeleton.JointPose;
 	import away3d.animators.skeleton.SkeletonPose;
 	import away3d.arcane;
 	import away3d.containers.ObjectContainer3D;
 	import away3d.containers.Scene3D;
+	import away3d.core.base.SkinnedSubGeometry;
 	import away3d.core.base.SubGeometry;
+	import away3d.core.base.SubMesh;
 	import away3d.entities.Mesh;
+	import away3d.materials.MaterialBase;
 	
 	import flash.utils.getQualifiedClassName;
 	
 	use namespace arcane;
-  
-  public class Serialize
-  {
+	
+	public class Serialize
+	{
 		public static var tabSize:uint = 2;
 		
-    public function Serialize()
-    {
-    }
-    
-    public static function serializeScene(scene:Scene3D, serializer:SerializerBase):void
-    {
-      for (var i:uint = 0; i < scene.numChildren; i++)
-      {
+		public function Serialize()
+		{
+		}
+		
+		public static function serializeScene(scene:Scene3D, serializer:SerializerBase):void
+		{
+			for (var i:uint = 0; i < scene.numChildren; i++)
+			{
 				serializeObjectContainer(scene.getChildAt(i), serializer);
-      }
-    }
-    
+			}
+		}
+		
 		public static function serializeObjectContainer(objectContainer3D:ObjectContainer3D, serializer:SerializerBase):void
 		{
 			if (objectContainer3D is Mesh)
@@ -41,24 +46,77 @@ package away3d.tools.serialize
 			}
 		}
 		
-    public static function serializeMesh(mesh:Mesh, serializer:SerializerBase):void
-    {
+		public static function serializeMesh(mesh:Mesh, serializer:SerializerBase):void
+		{
 			serializeObjectContainerInternal(mesh as ObjectContainer3D, serializer, false /* serializeChildrenAndEnd */);
-      
-      if (mesh.geometry.subGeometries.length)
-      {
-        for (var i:uint = 0; i < mesh.geometry.subGeometries.length; i++)
-        {
-					serializeSubGeometry(mesh.geometry.subGeometries[i], serializer);
-        }
-      }
-      
+			serializer.writeBoolean("mouseDetails", mesh.mouseDetails);
+			serializer.writeBoolean("castsShadows", mesh.castsShadows);
+			
+			if (mesh.animationState)
+			{
+				serializeAnimationState(mesh.animationState, serializer);
+			}
+			
+			if (mesh.material)
+			{
+				serializeMaterial(mesh.material, serializer);
+			}
+			
+			if (mesh.subMeshes.length)
+			{
+				for each (var subMesh:SubMesh in mesh.subMeshes)
+				{
+					serializeSubMesh(subMesh, serializer);
+				}
+			}
 			serializeChildren(mesh as ObjectContainer3D, serializer);
 			serializer.endObject();
-    }
-    
-    public static function serializeSubGeometry(subGeometry:SubGeometry, serializer:SerializerBase):void
-    {
+		}
+		
+		public static function serializeAnimationState(animationState:AnimationStateBase, serializer:SerializerBase):void
+		{
+			serializer.beginObject(classNameFromInstance(animationState), null);
+			serializeAnimation(animationState.animation, serializer);
+			serializer.endObject();
+		}
+		
+		public static function serializeAnimation(animation:AnimationBase, serializer:SerializerBase):void
+		{
+			serializer.beginObject(classNameFromInstance(animation), null);
+			serializer.endObject();
+		}
+		
+		public static function serializeSubMesh(subMesh:SubMesh, serializer:SerializerBase):void
+		{
+			serializer.beginObject(classNameFromInstance(subMesh), null);
+			if (subMesh.material)
+			{
+				serializeMaterial(subMesh.material, serializer);
+			}
+			if (subMesh.subGeometry)
+			{
+				serializeSubGeometry(subMesh.subGeometry, serializer);
+			}
+			serializer.endObject();
+		}
+		
+		public static function serializeMaterial(material:MaterialBase, serializer:SerializerBase):void
+		{
+			serializer.beginObject(classNameFromInstance(material), material.name);
+			serializer.writeString("lights", String(material.lights));
+			serializer.writeBoolean("mipmap", material.mipmap);
+			serializer.writeBoolean("smooth", material.smooth);
+			serializer.writeBoolean("repeat", material.repeat);
+			serializer.writeBoolean("bothSides", material.bothSides);
+			serializer.writeString("blendMode", material.blendMode);
+			serializer.writeBoolean("requiresBlending", material.requiresBlending);
+			serializer.writeUint("uniqueId", material.uniqueId);
+			serializer.writeUint("numPasses", material.numPasses);
+			serializer.endObject();
+		}
+		
+		public static function serializeSubGeometry(subGeometry:SubGeometry, serializer:SerializerBase):void
+		{
 			serializer.beginObject(classNameFromInstance(subGeometry), null);
 			serializer.writeUint("numTriangles", subGeometry.numTriangles);
 			if (subGeometry.indexData)
@@ -70,8 +128,20 @@ package away3d.tools.serialize
 			{
 				serializer.writeUint("numUVs", subGeometry.UVData.length);
 			}
+      var skinnedSubGeometry:SkinnedSubGeometry = subGeometry as SkinnedSubGeometry;
+      if (skinnedSubGeometry)
+      {
+        if (skinnedSubGeometry.jointWeightsData)
+        {
+          serializer.writeUint("numJointWeights", skinnedSubGeometry.jointWeightsData.length)
+        }
+        if (skinnedSubGeometry.jointIndexData)
+        {
+          serializer.writeUint("numJointIndexes", skinnedSubGeometry.jointIndexData.length)
+        }
+      }
 			serializer.endObject();
-    }
+		}
 		
 		public static function serializeJointPose(jointPose:JointPose, serializer:SerializerBase):void
 		{
@@ -104,7 +174,7 @@ package away3d.tools.serialize
 			}
 			serializer.endObject();
 		}
-
+		
 		// private stuff - shouldn't ever need to call externally
 		
 		private static function serializeChildren(parent:ObjectContainer3D, serializer:SerializerBase):void
@@ -130,5 +200,5 @@ package away3d.tools.serialize
 				serializer.endObject();
 			}
 		}
-  }
+	}
 }

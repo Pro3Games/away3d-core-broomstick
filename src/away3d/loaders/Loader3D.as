@@ -4,16 +4,16 @@ package away3d.loaders
 	import away3d.entities.Mesh;
 	import away3d.events.AssetEvent;
 	import away3d.events.LoaderEvent;
-	import away3d.events.LoaderEvent;
+	import away3d.library.AssetLibrary;
 	import away3d.library.assets.AssetType;
 	import away3d.loaders.misc.AssetLoaderContext;
+	import away3d.loaders.misc.AssetLoaderToken;
 	import away3d.loaders.misc.SingleFileLoader;
 	import away3d.loaders.parsers.ParserBase;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.net.URLRequest;
-	import away3d.library.AssetLibrary;
 	
 	/**
 	 * Loader3D can load any file format that Away3D supports (or for which a third-party parser
@@ -45,41 +45,45 @@ package away3d.loaders
 		}
 		
 		
-		public function load(req : URLRequest, parser : ParserBase = null, context : AssetLoaderContext = null, namespace : String = null) : void
+		public function load(req : URLRequest, parser : ParserBase = null, context : AssetLoaderContext = null, ns : String = null) : AssetLoaderToken
 		{
+			var token : AssetLoaderToken;
+			
 			if (_useAssetLib) {
 				var lib : AssetLibrary;
-				
 				lib = AssetLibrary.getInstance(_assetLibId);
-				lib.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				lib.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				lib.load(req, parser, context, namespace);
+				token = lib.load(req, parser, context, ns);
 			}
 			else {
 				var loader : AssetLoader = new AssetLoader();
-				loader.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				loader.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				loader.load(req, parser, context, namespace);
+				token = loader.load(req, parser, context, ns);
 			}
+			
+			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			token.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			
+			return token;
 		}
 		
 		
-		public function parseData(data : *, parser : ParserBase = null, context : AssetLoaderContext = null,  namespace : String = null) : void
+		public function parseData(data : *, parser : ParserBase = null, context : AssetLoaderContext = null,  ns : String = null) : AssetLoaderToken
 		{
+			var token : AssetLoaderToken;
+			
 			if (_useAssetLib) {
 				var lib : AssetLibrary;
-				
 				lib = AssetLibrary.getInstance(_assetLibId);
-				lib.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				lib.addEventListener(away3d.events.LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				lib.parseData(data, parser, context, namespace);
+				token = lib.parseData(data, parser, context, ns);
 			}
 			else {
 				var loader : AssetLoader = new AssetLoader();
-				loader.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				loader.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				loader.parseData(data, '', parser, context, namespace);
+				token = loader.parseData(data, '', parser, context, ns);
 			}
+			
+			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			token.addEventListener(away3d.events.LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			
+			return token;
 		}
 		
 		
@@ -96,7 +100,7 @@ package away3d.loaders
 		
 		
 		
-		private function onAssetRetrieved(ev : AssetEvent) : void
+		private function onAssetComplete(ev : AssetEvent) : void
 		{
 			var type : String = ev.asset.assetType;
 			if (type == AssetType.CONTAINER) {
@@ -112,14 +116,13 @@ package away3d.loaders
 		}
 		
 		
-		private function onResourceRetrieved(ev : Event) : void
+		private function onResourceComplete(ev : Event) : void
 		{
 			var dispatcher : EventDispatcher;
 			
 			dispatcher = EventDispatcher(ev.currentTarget);
-			dispatcher.removeEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-			dispatcher.removeEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-			dispatcher.removeEventListener(LoaderEvent.DATA_LOADED, onResourceRetrieved);
+			dispatcher.removeEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
 			
 			this.dispatchEvent(ev.clone());
 		}
