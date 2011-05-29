@@ -35,6 +35,7 @@ package away3d.loaders
 	{
 		private var _useAssetLib : Boolean;
 		private var _assetLibId : String;
+		private var _handle:ObjectContainer3D;
 		
 		public function Loader3D(useAssetLibrary : Boolean = true, assetLibraryId : String = null)
 		{
@@ -44,6 +45,10 @@ package away3d.loaders
 			_assetLibId = assetLibraryId;
 		}
 		
+		public function get handle():ObjectContainer3D
+		{
+			return _handle;
+		}
 		
 		public function load(req : URLRequest, parser : ParserBase = null, context : AssetLoaderContext = null, ns : String = null) : AssetLoaderToken
 		{
@@ -59,8 +64,17 @@ package away3d.loaders
 				token = loader.load(req, parser, context, ns);
 			}
 			
-			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
 			token.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATION_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATOR_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.BITMAP_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.CONTAINER_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.GEOMETRY_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MATERIAL_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MESH_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_POSE_COMPLETE, onAssetComplete);
 			
 			return token;
 		}
@@ -80,8 +94,17 @@ package away3d.loaders
 				token = loader.parseData(data, '', parser, context, ns);
 			}
 			
+			token.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
 			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
-			token.addEventListener(away3d.events.LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			token.addEventListener(AssetEvent.ANIMATION_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATOR_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.BITMAP_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.CONTAINER_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.GEOMETRY_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MATERIAL_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MESH_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_POSE_COMPLETE, onAssetComplete);
 			
 			return token;
 		}
@@ -105,11 +128,15 @@ package away3d.loaders
 			var type : String = ev.asset.assetType;
 			if (type == AssetType.CONTAINER) {
 				this.addChild(ObjectContainer3D(ev.asset));
+				
+				_handle = ev.asset as ObjectContainer3D;				
 			}
 			else if (type == AssetType.MESH) {
 				var mesh : Mesh = Mesh(ev.asset);
 				if (mesh.parent == null)
 					this.addChild(mesh);
+				
+				_handle = ev.asset as ObjectContainer3D;
 			}
 			
 			this.dispatchEvent(ev.clone());
@@ -121,8 +148,17 @@ package away3d.loaders
 			var dispatcher : EventDispatcher;
 			
 			dispatcher = EventDispatcher(ev.currentTarget);
-			dispatcher.removeEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
 			dispatcher.removeEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			dispatcher.removeEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.ANIMATION_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.ANIMATOR_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.BITMAP_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.CONTAINER_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.GEOMETRY_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.MATERIAL_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.MESH_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.SKELETON_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.SKELETON_POSE_COMPLETE, onAssetComplete);
 			
 			this.dispatchEvent(ev.clone());
 		}
