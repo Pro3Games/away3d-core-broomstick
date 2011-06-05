@@ -33,7 +33,7 @@ package away3d.entities
 		protected var _stackLen : uint;
 		protected var _bounds : BoundingVolumeBase;
 		protected var _boundsInvalid : Boolean = true;
-		private var _showBoundingBox : Boolean;
+		private var _showBounds : Boolean;
 
 		private var _mouseEnabled : Boolean;
 
@@ -46,15 +46,15 @@ package away3d.entities
 			_bounds = getDefaultBoundingVolume();
 		}
 
-		public function get showBoundingBox() : Boolean
+		public function get showBounds() : Boolean
 		{
-			return _showBoundingBox;
+			return _showBounds;
 		}
 
-		public function set showBoundingBox(value : Boolean) : void
+		public function set showBounds(value : Boolean) : void
 		{
-			if (value == _showBoundingBox) return;
-			_showBoundingBox = value;
+			if (value == _showBounds) return;
+			_showBounds = value;
 			if (value) addChild(_bounds.boundingRenderable);
 			else {
 				removeChild(_bounds.boundingRenderable);
@@ -168,7 +168,7 @@ package away3d.entities
 		public function get modelViewProjection() : Matrix3D
 		{
 			// assume base if popped
-			return _mvpTransformStack[_mvpIndex < 0? 0 : _mvpIndex];
+			return _mvpTransformStack[uint(uint(_mvpIndex > 0)*_mvpIndex)];
 		}
 
 		/**
@@ -184,7 +184,7 @@ package away3d.entities
 		 */
 		public function get zIndex() : Number
 		{
-			return _zIndices[_mvpIndex < 0? 0 : _mvpIndex];
+			return _zIndices[uint(uint(_mvpIndex > 0)*_mvpIndex)];
 		}
 
 		/**

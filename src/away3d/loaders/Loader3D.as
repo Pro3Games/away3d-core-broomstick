@@ -44,42 +44,65 @@ package away3d.loaders
 			_assetLibId = assetLibraryId;
 		}
 		
-		
 		public function load(req : URLRequest, parser : ParserBase = null, context : AssetLoaderContext = null, ns : String = null) : AssetLoaderToken
 		{
+			var token : AssetLoaderToken;
+			
 			if (_useAssetLib) {
 				var lib : AssetLibrary;
-				
 				lib = AssetLibrary.getInstance(_assetLibId);
-				lib.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				lib.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				return lib.load(req, parser, context, ns);
+				token = lib.load(req, parser, context, ns);
 			}
 			else {
 				var loader : AssetLoader = new AssetLoader();
-				loader.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				loader.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				return loader.load(req, parser, context, ns);
+				token = loader.load(req, parser, context, ns);
 			}
+			
+			token.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			token.addEventListener(LoaderEvent.LOAD_ERROR, onLoadError);
+			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATION_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATOR_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.BITMAP_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.CONTAINER_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.GEOMETRY_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MATERIAL_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MESH_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_POSE_COMPLETE, onAssetComplete);
+			
+			return token;
 		}
 		
 		
 		public function parseData(data : *, parser : ParserBase = null, context : AssetLoaderContext = null,  ns : String = null) : AssetLoaderToken
 		{
+			var token : AssetLoaderToken;
+			
 			if (_useAssetLib) {
 				var lib : AssetLibrary;
-				
 				lib = AssetLibrary.getInstance(_assetLibId);
-				lib.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				lib.addEventListener(away3d.events.LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				return lib.parseData(data, parser, context, ns);
+				token = lib.parseData(data, parser, context, ns);
 			}
 			else {
 				var loader : AssetLoader = new AssetLoader();
-				loader.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-				loader.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-				return loader.parseData(data, '', parser, context, ns);
+				token = loader.parseData(data, '', parser, context, ns);
 			}
+			
+			token.addEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			token.addEventListener(LoaderEvent.LOAD_ERROR, onLoadError);
+			token.addEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATION_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.ANIMATOR_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.BITMAP_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.CONTAINER_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.GEOMETRY_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MATERIAL_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.MESH_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_COMPLETE, onAssetComplete);
+			token.addEventListener(AssetEvent.SKELETON_POSE_COMPLETE, onAssetComplete);
+			
+			return token;
 		}
 		
 		
@@ -96,31 +119,65 @@ package away3d.loaders
 		
 		
 		
-		private function onAssetRetrieved(ev : AssetEvent) : void
+		private function removeListeners(dispatcher : EventDispatcher) : void
 		{
-			var type : String = ev.asset.assetType;
-			if (type == AssetType.CONTAINER) {
-				this.addChild(ObjectContainer3D(ev.asset));
-			}
-			else if (type == AssetType.MESH) {
-				var mesh : Mesh = Mesh(ev.asset);
-				if (mesh.parent == null)
-					this.addChild(mesh);
+			dispatcher.removeEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceComplete);
+			dispatcher.removeEventListener(LoaderEvent.LOAD_ERROR, onLoadError);
+			dispatcher.removeEventListener(AssetEvent.ASSET_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.ANIMATION_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.ANIMATOR_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.BITMAP_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.CONTAINER_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.GEOMETRY_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.MATERIAL_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.MESH_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.SKELETON_COMPLETE, onAssetComplete);
+			dispatcher.removeEventListener(AssetEvent.SKELETON_POSE_COMPLETE, onAssetComplete);
+		}
+		
+		
+		
+		private function onAssetComplete(ev : AssetEvent) : void
+		{
+			if (ev.type == AssetEvent.ASSET_COMPLETE) {
+				var type : String = ev.asset.assetType;
+				var obj : ObjectContainer3D;
+				
+				switch (ev.asset.assetType) {
+					case AssetType.CONTAINER:
+						obj = ObjectContainer3D(ev.asset);
+						break;
+					case AssetType.MESH:
+						obj = Mesh(ev.asset);
+						break;
+				}
+				
+				// If asset was of fitting type, and doesn't
+				// already have a parent, add to loader container
+				if (obj && obj.parent==null) {
+					addChild(obj);
+				}
 			}
 			
 			this.dispatchEvent(ev.clone());
 		}
 		
 		
-		private function onResourceRetrieved(ev : Event) : void
+		private function onLoadError(ev : LoaderEvent) : void
 		{
-			var dispatcher : EventDispatcher;
+			removeListeners(EventDispatcher(ev.currentTarget));
 			
-			dispatcher = EventDispatcher(ev.currentTarget);
-			dispatcher.removeEventListener(AssetEvent.ASSET_COMPLETE, onAssetRetrieved);
-			dispatcher.removeEventListener(LoaderEvent.RESOURCE_COMPLETE, onResourceRetrieved);
-			dispatcher.removeEventListener(LoaderEvent.DATA_LOADED, onResourceRetrieved);
-			
+			if (hasEventListener(LoaderEvent.LOAD_ERROR)) {
+				dispatchEvent(ev.clone());
+			}
+			else {
+				throw new Error(ev.message);
+			}
+		}
+
+		private function onResourceComplete(ev : Event) : void
+		{
+			removeListeners(EventDispatcher(ev.currentTarget));
 			this.dispatchEvent(ev.clone());
 		}
 	}
