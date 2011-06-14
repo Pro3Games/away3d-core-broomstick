@@ -352,7 +352,7 @@ package away3d.containers
 
 			_entityCollector.cleanUp();
 			
-			fireMouseMoveEvent();
+//			fireMouseMoveEvent();
 		}
 		
 		/**
