@@ -2,7 +2,7 @@ package away3d.library.assets
 {
 	import away3d.arcane;
 	import away3d.events.AssetEvent;
-	
+
 	import flash.events.EventDispatcher;
 
 	use namespace arcane;
@@ -80,6 +80,12 @@ package away3d.library.assets
 				_originalName = _name;
 		
 			update();
+		}
+		
+		
+		public function disposeAsset() : void
+		{
+			// TODO: Should be overridden by sub-types
 		}
 		
 		
