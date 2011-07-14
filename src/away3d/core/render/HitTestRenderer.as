@@ -66,8 +66,8 @@ package away3d.core.render
 		{
 			super(0, true, renderMode);
 			swapBackBuffer = false;
-			backBufferWidth = 1;
-			backBufferHeight = 1;
+			backBufferWidth = 32;
+			backBufferHeight = 32;
 
 			init();
 		}
@@ -108,7 +108,7 @@ package away3d.core.render
 			_potentialFound = false;
 			render(entityCollector);
 
-			if (!_context && !_potentialFound) return;
+			if (!_context || !_potentialFound) return;
 			_context.drawToBitmapData(_bitmapData);
 			_hitColor = _bitmapData.getPixel(0, 0);
 
