@@ -283,6 +283,8 @@ package away3d.core.base
 
 		public function set position(value : Vector3D) : void
 		{
+			if (_rotationValuesDirty) updateTransformValues();
+
 			_x = value.x;
 			_y = value.y;
 			_z = value.z;
@@ -324,6 +326,7 @@ package away3d.core.base
 			var clone : Object3D = new Object3D();
 			clone.pivotPoint = pivotPoint;
 			clone.transform = transform;
+			clone.name = name;
 			// todo: implement for all subtypes
 			return clone;
 		}
@@ -464,7 +467,7 @@ package away3d.core.base
 		 */
 		public function get rotationX() : Number
 		{
-			if (_rotationValuesDirty) updateTransformValues();
+			if (_rotationValuesDirty || _scaleValuesDirty) updateTransformValues();
 
 			return _rotationX * MathConsts.RADIANS_TO_DEGREES;
 		}
