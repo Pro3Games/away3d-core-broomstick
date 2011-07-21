@@ -7,14 +7,9 @@ package away3d.core.managers
 	import flash.display3D.Context3D;
 	import flash.display3D.Program3D;
 	import flash.display3D.VertexBuffer3D;
-	import flash.display3D.textures.Texture;
-	import flash.display3D.textures.TextureBase;
 	import flash.display3D.textures.TextureBase;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.geom.Rectangle;
-
-	import org.osmf.events.BufferEvent;
 
 	use namespace arcane;
 
@@ -93,10 +88,10 @@ package away3d.core.managers
 		{
 			_stage3DManager.removeStage3DProxy(this);
 			_stage3D.removeEventListener(Event.CONTEXT3D_CREATE, onContext3DUpdate);
+			freeContext3D();
 			_stage3D = null;
 			_stage3DManager = null;
 			_stage3DIndex = -1;
-			freeContext3D();
 		}
 
 		/**
