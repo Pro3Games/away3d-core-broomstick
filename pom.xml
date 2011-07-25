@@ -13,7 +13,7 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<flex.sdk.version>4.5.0.19786-MOLEHILL-022711</flex.sdk.version>
+		<flex.sdk.version>4.5.0.19786-MOLEHILL-071311</flex.sdk.version>
 		<flexmojos.version>4.0-beta-7</flexmojos.version>
 	</properties>
 	
@@ -29,7 +29,7 @@
 				
 				<configuration>
 					<debug>true</debug>
-					<swfVersion>13</swfVersion>
+					<swfVersion>14</swfVersion>
 					<targetPlayer>11.0.0</targetPlayer>
 				</configuration>
 				
