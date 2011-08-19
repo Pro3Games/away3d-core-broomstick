@@ -278,7 +278,7 @@ package away3d.core.base
 		public function get position() : Vector3D
 		{
 			transform.copyRowTo(3, _pos);
-			return _pos;
+			return _pos.clone();
 		}
 
 		public function set position(value : Vector3D) : void
@@ -356,10 +356,7 @@ package away3d.core.base
 		 */
 		public function rotate(axis : Vector3D, angle : Number) : void
 		{
-			// notify
-			invalidateTransform();
-
-			axis.normalize();
+//			axis.normalize();
 
 			transform.prependRotation(angle, axis);
 
@@ -591,9 +588,9 @@ package away3d.core.base
 
 		public function set eulers(value : Vector3D) : void
 		{
-			_rotationX = value.x * MathConsts.RADIANS_TO_DEGREES;
-			_rotationY = value.y * MathConsts.RADIANS_TO_DEGREES;
-			_rotationZ = value.z * MathConsts.RADIANS_TO_DEGREES;
+			_rotationX = value.x * MathConsts.DEGREES_TO_RADIANS;
+			_rotationY = value.y * MathConsts.DEGREES_TO_RADIANS;
+			_rotationZ = value.z * MathConsts.DEGREES_TO_RADIANS;
 			_rotationValuesDirty = false;
 			invalidateTransform();
 		}
@@ -618,7 +615,7 @@ package away3d.core.base
 		{
 			if (_rotationValuesDirty || _scaleValuesDirty) updateTransformValues();
 
-			_quaternion.fromEulerAngles(_rotationY, _rotationZ, -_rotationX); // Swapped
+			_quaternion.fromEulerAngles(_rotationX, _rotationY, _rotationZ);
 
 			if (_pivotZero) {
 				Matrix3DUtils.quaternion2matrix(_quaternion, _transform);
@@ -643,7 +640,6 @@ package away3d.core.base
 			var x : Number, y : Number, z : Number;
 
 			if (_rotationValuesDirty) {
-//				_quaternion.fromMatrix(_transform);
 				rot = Vector3DUtils.matrix2euler(_transform);
 				_rotationX = rot.x;
 				_rotationY = rot.y;
@@ -669,5 +665,5 @@ package away3d.core.base
 				_scaleValuesDirty = false;
 			}
 		}
-		}
+	}
 }

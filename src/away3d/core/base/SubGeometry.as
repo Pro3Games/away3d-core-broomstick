@@ -67,6 +67,7 @@ package away3d.core.base
 		protected var _numVertices : uint;
 		protected var _numIndices : uint;
 		protected var _numTriangles : uint;
+		private var _uvScale : Number = 1;
 
 		/**
 		 * Creates a new SubGeometry object.
@@ -278,8 +279,8 @@ package away3d.core.base
 			var clone : SubGeometry = new SubGeometry();
 			clone.updateVertexData(_vertices.concat());
 			clone.updateUVData(_uvs.concat());
-			clone.updateSecondaryUVData(_secondaryUvs.concat());
 			clone.updateIndexData(_indices.concat());
+			if (_secondaryUvs) clone.updateSecondaryUVData(_secondaryUvs.concat());
 			if (!_autoDeriveVertexNormals) clone.updateVertexNormalData(_vertexNormals.concat());
 			if (!_autoDeriveVertexTangents) clone.updateVertexTangentData(_vertexTangents.concat());
 			return clone;
@@ -303,6 +304,7 @@ package away3d.core.base
 		 */
 		public function scaleUV(scale : Number):void
 		{
+			_uvScale *= scale;
 			var len : uint = _uvs.length;
 			for (var i : uint = 0; i < len; ++i)
 				_uvs[i] *= scale;
@@ -314,11 +316,7 @@ package away3d.core.base
 		 */
 		public function dispose() : void
 		{
-			disposeVertexBuffers(_vertexBuffer);
-			disposeVertexBuffers(_vertexNormalBuffer);
-			disposeVertexBuffers(_uvBuffer);
-			disposeVertexBuffers(_secondaryUvBuffer);
-			disposeVertexBuffers(_vertexTangentBuffer);
+			disposeAllVertexBuffers();
 			disposeIndexBuffers(_indexBuffer);
 
 			for (var i : int = 0; i < 8; ++i) {
@@ -327,6 +325,15 @@ package away3d.core.base
 					_listeningForDispose[i] = null;
 				}
 			}
+		}
+
+		protected function disposeAllVertexBuffers() : void
+		{
+			disposeVertexBuffers(_vertexBuffer);
+			disposeVertexBuffers(_vertexNormalBuffer);
+			disposeVertexBuffers(_uvBuffer);
+			disposeVertexBuffers(_secondaryUvBuffer);
+			disposeVertexBuffers(_vertexTangentBuffer);
 		}
 
 		/**
@@ -349,7 +356,9 @@ package away3d.core.base
 			_faceNormalsDirty = true;
 
 			_vertices = vertices;
-			_numVertices = vertices.length / 3;
+			var numVertices : int = vertices.length / 3;
+			if (numVertices != _numVertices) disposeAllVertexBuffers();
+			_numVertices = numVertices;
             invalidateBuffers(_vertexBufferDirty);
 
 			invalidateBounds();
@@ -456,7 +465,11 @@ package away3d.core.base
 		{
 			_indices = indices;
 			_numIndices = indices.length;
-			_numTriangles = _numIndices/3;
+
+			var numTriangles : int = _numIndices/3;
+			if (_numTriangles != numTriangles)
+				disposeIndexBuffers(_indexBuffer);
+			_numTriangles = numTriangles;
 			invalidateBuffers(_indexBufferDirty);
 			_faceNormalsDirty = true;
 
@@ -719,6 +732,7 @@ package away3d.core.base
 			var dx1 : Number, dy1 : Number, dz1 : Number;
 			var dx2 : Number, dy2 : Number, dz2 : Number;
 			var cx : Number, cy : Number, cz : Number;
+			var invScale : Number = 1/_uvScale;
 
 			_faceTangents ||= new Vector.<Number>(_indices.length, true);
 
@@ -729,9 +743,9 @@ package away3d.core.base
 
 				v0 = _uvs[uint((index1 << 1) + 1)];
 				ui = index2 << 1;
-				dv1 = _uvs[uint((index2 << 1) + 1)] - v0;
+				dv1 = (_uvs[uint((index2 << 1) + 1)] - v0)*invScale;
 				ui = index3 << 1;
-				dv2 = _uvs[uint((index3 << 1) + 1)] - v0;
+				dv2 = (_uvs[uint((index3 << 1) + 1)] - v0)*invScale;
 
 				vi = index1*3;
 				x0 = _vertices[vi];

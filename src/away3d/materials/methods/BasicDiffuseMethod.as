@@ -177,7 +177,17 @@ package away3d.materials.methods
 		arcane override function reset() : void
 		{
 			super.reset();
+
+			_diffuseInputIndex = -1;
+			_cutOffIndex = -1;
+		}
+
+		arcane override function cleanCompilationData() : void
+		{
+			super.cleanCompilationData();
 			_shadowRegister = null;
+			_totalLightColorReg = null;
+			_diffuseInputRegister = null;
 		}
 
 		/**
@@ -246,11 +256,13 @@ package away3d.materials.methods
 				regCache.removeFragmentTempUsage(_totalLightColorReg);
 			}
 
-			temp = _numLights > 0? regCache.	getFreeFragmentVectorTemp() : targetReg;
+			temp = _numLights > 0? regCache.getFreeFragmentVectorTemp() : targetReg;
 
             if (_useTexture) {
 				_diffuseInputRegister = regCache.getFreeTextureReg();
-				code += getTexSampleCode(temp, _diffuseInputRegister);
+				code += getTexSampleCode(temp, _diffuseInputRegister) +
+						// apparently, still needs to un-premultiply :s
+						"div " + temp + ".xyz, " + temp + ".xyz, " + temp + ".w\n";
                 if (_alphaThreshold > 0) {
                     cutOffReg = regCache.getFreeFragmentConstant();
                     _cutOffIndex = cutOffReg.index;

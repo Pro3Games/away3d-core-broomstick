@@ -166,7 +166,7 @@ package away3d.primitives
 			mvp.identity();
 			mvp.appendScale(size, size, size);
 			mvp.appendTranslation(camera.x, camera.y, camera.z);
-			mvp.append(camera.viewProjection);
+			mvp.append(camera.renderToTextureProjection);
 		}
 
 		/**
@@ -247,6 +247,11 @@ package away3d.primitives
 		public function get uvTransform() : Matrix
 		{
 			return _uvTransform;
+		}
+
+		public function getSecondaryUVBuffer(stage3DProxy : Stage3DProxy) : VertexBuffer3D
+		{
+			return null;
 		}
 	}
 }
