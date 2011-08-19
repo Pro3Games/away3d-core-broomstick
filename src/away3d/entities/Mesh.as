@@ -150,8 +150,14 @@
 		 */
 		override public function dispose(deep : Boolean) : void
 		{
+			_geometry.removeEventListener(GeometryEvent.BOUNDS_INVALID, onGeometryBoundsInvalid);
+			_geometry.removeEventListener(GeometryEvent.SUB_GEOMETRY_ADDED, onSubGeometryAdded);
+			_geometry.removeEventListener(GeometryEvent.SUB_GEOMETRY_REMOVED, onSubGeometryRemoved);
+			_geometry.removeEventListener(GeometryEvent.ANIMATION_CHANGED, onAnimationChanged);
+
 			if (deep) {
 				_geometry.dispose();
+
 				if (_material) {
 					_material.dispose(true);
 					material = null;
@@ -229,8 +235,9 @@
 		{
 			var subMesh : SubMesh;
 			var subGeom : SubGeometry = event.subGeometry;
-			var len : uint = _subMeshes.length;
+			var len : int = _subMeshes.length;
 			var i : uint;
+
 			for (i = 0; i < len; ++i) {
 				subMesh = _subMeshes[i];
 				if (subMesh.subGeometry == subGeom) {
@@ -254,6 +261,7 @@
 			var len : uint = _subMeshes.length;
 			subMesh._index = len;
 			_subMeshes[len] = subMesh;
+			invalidateBounds();
 		}
 
 		/**
@@ -262,6 +270,11 @@
 		private function onAnimationChanged(event : GeometryEvent) : void
 		{
 			animationState = _geometry.animation.createAnimationState();
+		}
+
+		public function getSubMeshForSubGeometry(subGeometry : SubGeometry) : SubMesh
+		{
+			return _subMeshes[_geometry.subGeometries.indexOf(subGeometry)];
 		}
 	}
 }
