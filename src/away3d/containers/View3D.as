@@ -378,7 +378,7 @@ package away3d.containers
 			_entityCollector.cleanUp();
 
 			// fire collected mouse events
-			// _mouse3DManager.fireMouseEvents();
+			 _mouse3DManager.fireMouseEvents();
 		}
 
 		private function updateGlobalPos() : void
