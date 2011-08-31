@@ -238,6 +238,16 @@ package away3d.core.base
 		}
 
 		/**
+		 * The model-view-projection (MVP) matrix used to transform from model to homogeneous projection space.
+		 *
+		 * @private
+		 */
+		public function getModelViewProjectionUnsafe() : Matrix3D
+		{
+			return _parentMesh.getModelViewProjectionUnsafe();
+		}
+
+		/**
 		 * The amount of triangles that make up this SubMesh.
 		 */
 		public function get numTriangles() : uint
@@ -303,6 +313,11 @@ package away3d.core.base
 			if (_scaleU != 1 || _scaleV != 1) _uvTransform.scale(_scaleU, _scaleV);
 			_uvTransform.translate(_offsetU, _offsetV);
 			_uvTransformDirty = false;
+		}
+
+		public function getSecondaryUVBuffer(stage3DProxy : Stage3DProxy) : VertexBuffer3D
+		{
+			return _subGeometry.getSecondaryUVBuffer(stage3DProxy);
 		}
 	}
 }

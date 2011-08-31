@@ -7,6 +7,7 @@ package away3d.loaders.parsers
 	import away3d.library.assets.BitmapDataAsset;
 	import away3d.loaders.misc.ResourceDependency;
 	import away3d.materials.BitmapMaterial;
+	import away3d.tools.utils.TextureUtils;
 
 	import flash.display.BitmapData;
 	import flash.geom.Matrix3D;
@@ -780,7 +781,7 @@ package away3d.loaders.parsers
 			while (i < numUVs) {
 				_activeData.uvs[_induv++] = _byteData.readFloat();
 				_activeData.uvs[_induv++] = 1-_byteData.readFloat();
-				
+
 				chunk.bytesRead += 8;
 				i++;
 			}
