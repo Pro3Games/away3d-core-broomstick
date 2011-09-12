@@ -198,9 +198,10 @@ package away3d.audio
 		// WORK AROUND WHILE EVENTS ARE ADDED
 		public function update():void
 		{
-			_inv_ref_mtx.rawData = _reference.sceneTransform.rawData;
-			_inv_ref_mtx.invert();
-			_refv = _inv_ref_mtx.deltaTransformVector(_reference.position);
+//			_inv_ref_mtx.rawData = _reference.sceneTransform.rawData;
+//			_inv_ref_mtx.invert();
+//			_refv = _inv_ref_mtx.deltaTransformVector(_reference.position);
+			_refv = _reference.scenePosition;
 			_refv = this.scenePosition.subtract(_refv);
 			_driver.updateReferenceVector(_refv);
 		}
