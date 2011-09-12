@@ -8,7 +8,9 @@
 	import away3d.library.assets.IAsset;
 	import away3d.library.assets.NamedAssetBase;
 
-	use namespace arcane;
+import flash.geom.Matrix3D;
+
+use namespace arcane;
 	
 	/**
 	 * Geometry is a collection of SubGeometries, each of which contain the actual geometrical data such as vertices,
@@ -33,6 +35,14 @@
 		{
 			_subGeometries = new Vector.<SubGeometry>();
 			_animation = new NullAnimation();
+		}
+
+		public function applyTransformation(transform:Matrix3D):void
+		{
+			var len : uint = _subGeometries.length;
+			for (var i : int = 0; i < len; ++i) {
+				_subGeometries[i].applyTransformation(transform);
+			}
 		}
 		
 		
@@ -125,9 +135,10 @@
 		public function dispose() : void
 		{
 			var numSubGeoms : uint = _subGeometries.length;
+
 			for (var i : uint = 0; i < numSubGeoms; ++i)
 			{
-				var subGeom:SubGeometry = _subGeometries.shift();
+				var subGeom:SubGeometry = _subGeometries[0];
 				removeSubGeometry(subGeom);
 				subGeom.dispose();
 			}

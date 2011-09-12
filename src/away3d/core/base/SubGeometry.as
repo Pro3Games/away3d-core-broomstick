@@ -8,8 +8,10 @@ package away3d.core.base
 	import flash.display3D.Context3D;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
+import flash.geom.Matrix3D;
+import flash.geom.Vector3D;
 
-	use namespace arcane;
+use namespace arcane;
 
 	/**
 	 * The SubGeometry class is a collections of geometric data that describes a triangle mesh. It is owned by a
@@ -113,8 +115,7 @@ package away3d.core.base
 		{
 			_autoDeriveVertexNormals = value;
 
-			if (!value)
-				_vertexNormalsDirty = false;
+			_vertexNormalsDirty = value;
 		}
 
 		/**
@@ -146,8 +147,7 @@ package away3d.core.base
 		{
 			_autoDeriveVertexTangents = value;
 
-			if (!value)
-				_vertexTangentsDirty = false;
+			_vertexTangentsDirty = value;
 		}
 
 		/**
@@ -188,6 +188,26 @@ package away3d.core.base
 			}
 
 			return _uvBuffer[contextIndex];
+		}
+
+		public function applyTransformation(transform:Matrix3D):void
+		{
+			var len : uint = _vertices.length/3;
+			var i:uint, index:uint;
+			var v3:Vector3D = new Vector3D();
+			for (i = 0; i < len; ++i) {
+
+				index = 3 * i;
+				v3.x = _vertices[index];
+				v3.y = _vertices[index + 1];
+				v3.z = _vertices[index + 2];
+
+				v3 = transform.transformVector(v3);
+
+				_vertices[index] = v3.x;
+				_vertices[index + 1] = v3.y;
+				_vertices[index + 2] = v3.z;
+			}
 		}
 
 		public function getSecondaryUVBuffer(stage3DProxy : Stage3DProxy) : VertexBuffer3D

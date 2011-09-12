@@ -5,6 +5,7 @@
 	import away3d.core.managers.BitmapDataTextureCache;
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.core.managers.Texture3DProxy;
+	import away3d.lights.LightBase;
 	import away3d.materials.methods.BasicAmbientMethod;
 	import away3d.materials.methods.BasicDiffuseMethod;
 	import away3d.materials.methods.BasicNormalMethod;
@@ -34,6 +35,13 @@
 		{
 			super();
 			addPass(_screenPass = new DefaultScreenPass(this));
+		}
+
+
+		override public function set lights(value : Array) : void
+		{
+			super.lights = value;
+			_screenPass.lights = value? Vector.<LightBase>(value) : null;
 		}
 
 		/**
@@ -142,9 +150,19 @@
 			_screenPass.addMethod(method);
 		}
 
+		public function get numMethods() : int
+		{
+			return _screenPass.numMethods;
+		}
+
 		public function hasMethod(method : ShadingMethodBase) : Boolean
 		{
 			return _screenPass.hasMethod(method);
+		}
+
+		public function getMethodAt(index : int) : ShadingMethodBase
+		{
+			return _screenPass.getMethodAt(index);
 		}
 
 		public function addMethodAt(method : ShadingMethodBase, index : int) : void
