@@ -485,6 +485,7 @@ package away3d.debug
 			// SOFTWARE RENDERER WARNING
 			swhw_label_tf = new TextField;
 			swhw_label_tf.defaultTextFormat = _label_format;
+            swhw_label_tf.autoSize = TextFieldAutoSize.LEFT;
 			swhw_label_tf.text = 'DRIV:';
 			swhw_label_tf.x = 10;
 			swhw_label_tf.y = _LOWER_Y;
@@ -631,8 +632,9 @@ package away3d.debug
 			// Only redraw polycount if there is a  view available
 			// or they won't have been calculated properly
 			if (_views.length > 0) {
-				_poly_tf.text = _rfaces.toString().concat(' / ', _tfaces);
-				
+//				_poly_tf.text = _rfaces.toString().concat(' / ', _tfaces); // TODO: Total faces not yet available in 4.x
+				_poly_tf.text = _rfaces + "";
+
 				// Plot rendered faces
 				dia_y = _dia_bmp.height - Math.floor(_rfaces/_tfaces * _dia_bmp.height);
 				_dia_bmp.setPixel32(1, dia_y, _POLY_COL+0xff000000);
@@ -643,7 +645,7 @@ package away3d.debug
 			
 			// Show software (SW) or hardware (HW)
 			if (!_showing_driv_info) {
-				if (_views && _views.length && _views[0].renderer.stage3DProxy) {
+				if (_views && _views.length && _views[0].renderer.stage3DProxy && _views[0].renderer.stage3DProxy.context3D) {
 					var di : String = _views[0].renderer.stage3DProxy.context3D.driverInfo;
 					_swhw_tf.text = di.substr(0, di.indexOf(' '));
 					_showing_driv_info = true;

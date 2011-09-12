@@ -144,6 +144,8 @@ package away3d.containers
 
 		public function set filters3d(value : Array) : void
 		{
+			if (value && value.length == 0) value = null;
+
 			if (_filter3DRenderer && !value) {
 				_filter3DRenderer.dispose();
 				_filter3DRenderer = null;
@@ -219,7 +221,6 @@ package away3d.containers
 			else if (value < 0) value = 0;
 			_renderer.backgroundAlpha = value;
 			_backgroundAlpha = value;
-			if (_stage3DProxy) _stage3DProxy.transparent = value < 1;
 		}
 
 		/**
@@ -244,6 +245,14 @@ package away3d.containers
 		public function get scene() : Scene3D
 		{
 			return _scene;
+		}
+
+		/**
+		 * Set the scene that's used to render for this viewport
+		 */
+		public function set scene(scene:Scene3D) : void
+		{
+			_scene = scene;
 		}
 
 		// todo: probably temporary:
@@ -515,7 +524,6 @@ package away3d.containers
 			if (_height == 0) height = stage.stageHeight;
 
 			_stage3DProxy = _stage3DManager.getFreeStage3DProxy();
-			_stage3DProxy.transparent = _backgroundAlpha < 1;
 			_stage3DProxy.x = _globalPos.x;
 			_stage3DProxy.y = _globalPos.y;
 			_renderer.stage3DProxy = _depthRenderer.stage3DProxy = _mouse3DManager.stage3DProxy = _stage3DProxy;

@@ -11,29 +11,29 @@ package away3d.core.base
 
 	/**
 	 * Object3D provides a base class for any 3D object that has a (local) transformation.
-	 * 
+	 *
 	 * Standard Transform:
 	 * - The standard order for transformation is [parent transform] * (Translate+Pivot) * (Rotate) * (-Pivot) * (Scale) * [child transform]
 	 *   - This is the order of matrix multiplications, left-to-right.
 	 *   - The order of transformation is right-to-left, however!
 	 *       (Scale) happens before (-Pivot) happens before (Rotate) happens before (Translate+Pivot)
-	 *   - with no pivot, the above transform works out to [parent transform] * Translate * Rotate * Scale * [child transform] 
+	 *   - with no pivot, the above transform works out to [parent transform] * Translate * Rotate * Scale * [child transform]
 	 *       (Scale) happens before (Rotate) happens before (Translate)
 	 *   - This is based on code in updateTransform and ObjectContainer3D.updateSceneTransform().
 	 *   - Matrix3D prepend = operator on rhs - e.g. transform' = transform * rhs;
 	 *   - Matrix3D append =  operator on lhr - e.g. transform' = lhs * transform;
-	 * 
+	 *
 	 * To affect Scale:
 	 * - set scaleX/Y/Z directly, or call scale(delta)
-	 * 
+	 *
 	 * To affect Pivot:
 	 * - set pivotPoint directly, or call movePivot()
-	 * 
+	 *
 	 * To affect Rotate:
 	 * - set rotationX/Y/Z individually (using degrees), set eulers [all 3 angles] (using radians), or call rotateTo()
-	 * - call pitch()/yaw()/roll()/rotate() to add an additional rotation *before* the current transform.  
+	 * - call pitch()/yaw()/roll()/rotate() to add an additional rotation *before* the current transform.
 	 *     rotationX/Y/Z will be reset based on these operations.
-	 * 
+	 *
 	 * To affect Translate (post-rotate translate):
 	 * - set x/y/z/position or call moveTo().
 	 * - call translate(), which modifies x/y/z based on a delta vector.
@@ -107,7 +107,7 @@ package away3d.core.base
 			_transformDirty = false;
 			_rotationValuesDirty = true;
 			_scaleValuesDirty = true;
-			value.copyRowTo(3, _pos);
+			_transform.copyColumnTo(3, _pos);
 			_x = _pos.x;
 			_y = _pos.y;
 			_z = _pos.z;
@@ -119,6 +119,7 @@ package away3d.core.base
 		 */
 		public function scale(value : Number) : void
 		{
+			if (_scaleValuesDirty) updateTransformValues();
 			_scaleX *= value;
 			_scaleY *= value;
 			_scaleZ *= value;
@@ -266,7 +267,7 @@ package away3d.core.base
 			var len : Number = distance / Math.sqrt(x * x + y * y + z * z);
 
 			transform.prependTranslation(x*len, y*len, z*len);
-			_transform.copyRowTo(3, _pos);
+			_transform.copyColumnTo(3, _pos);
 			_x = _pos.x;
 			_y = _pos.y;
 			_z = _pos.z;
@@ -277,14 +278,12 @@ package away3d.core.base
 		 */
 		public function get position() : Vector3D
 		{
-			transform.copyRowTo(3, _pos);
+			transform.copyColumnTo(3, _pos);
 			return _pos.clone();
 		}
 
 		public function set position(value : Vector3D) : void
 		{
-			if (_rotationValuesDirty) updateTransformValues();
-
 			_x = value.x;
 			_y = value.y;
 			_z = value.z;
@@ -356,8 +355,6 @@ package away3d.core.base
 		 */
 		public function rotate(axis : Vector3D, angle : Number) : void
 		{
-//			axis.normalize();
-
 			transform.prependRotation(angle, axis);
 
 			_rotationValuesDirty = true;
@@ -391,19 +388,26 @@ package away3d.core.base
 			yAxis = zAxis.crossProduct(xAxis);
 
 			raw = Matrix3DUtils.RAW_DATA_CONTAINER;
-			_transform.copyRawDataTo(raw);
 
 			raw[uint(0)] = _scaleX*xAxis.x;
 			raw[uint(1)] = _scaleX*xAxis.y;
 			raw[uint(2)] = _scaleX*xAxis.z;
+			raw[uint(3)] = 0;
 
 			raw[uint(4)] = _scaleY*yAxis.x;
 			raw[uint(5)] = _scaleY*yAxis.y;
 			raw[uint(6)] = _scaleY*yAxis.z;
+			raw[uint(7)] = 0;
 
 			raw[uint(8)] = _scaleZ*zAxis.x;
 			raw[uint(9)] = _scaleZ*zAxis.y;
 			raw[uint(10)] = _scaleZ*zAxis.z;
+			raw[uint(11)] = 0;
+
+			raw[uint(12)] = _x;
+			raw[uint(13)] = _y;
+			raw[uint(14)] = _z;
+			raw[uint(15)] = 1;
 
 			_transform.copyRawDataFrom(raw);
 
@@ -421,8 +425,6 @@ package away3d.core.base
 
 		public function set x(value : Number) : void
 		{
-			if (_x == value) return;
-			if (value != value) throw new Error("isNaN(x)");
 			_x = value;
 			invalidateTransform();
 		}
@@ -437,8 +439,6 @@ package away3d.core.base
 
 		public function set y(value : Number) : void
 		{
-			if (_y == value) return;
-			if (!(value > 0) && !(value <= 0)) throw new Error("isNaN(x)");
 			_y = value;
 			invalidateTransform();
 		}
@@ -453,8 +453,6 @@ package away3d.core.base
 
 		public function set z(value : Number) : void
 		{
-			if (_z == value) return;
-			if (!(value > 0) && !(value <= 0)) throw new Error("isNaN(x)");
 			_z = value;
 			invalidateTransform();
 		}
@@ -464,14 +462,14 @@ package away3d.core.base
 		 */
 		public function get rotationX() : Number
 		{
-			if (_rotationValuesDirty || _scaleValuesDirty) updateTransformValues();
+			if (_rotationValuesDirty) updateTransformValues();
 
 			return _rotationX * MathConsts.RADIANS_TO_DEGREES;
 		}
 
 		public function set rotationX(rot : Number) : void
 		{
-			if (rotationX == rot) return;
+			if (_rotationValuesDirty) updateTransformValues();
 
 			_rotationX = rot * MathConsts.DEGREES_TO_RADIANS;
 
@@ -490,7 +488,7 @@ package away3d.core.base
 
 		public function set rotationY(rot : Number) : void
 		{
-			if (rotationY == rot) return;
+			if (_rotationValuesDirty) updateTransformValues();
 
 			_rotationY = rot * MathConsts.DEGREES_TO_RADIANS;
 
@@ -509,7 +507,7 @@ package away3d.core.base
 
 		public function set rotationZ(rot : Number) : void
 		{
-			if (rotationZ == rot) return;
+			if (_rotationValuesDirty) updateTransformValues();
 
 			_rotationZ = rot * MathConsts.DEGREES_TO_RADIANS;
 
@@ -527,10 +525,8 @@ package away3d.core.base
 
 		public function set scaleX(scale : Number) : void
 		{
-			if (scaleX == scale) return;
-
+			if (_scaleValuesDirty) updateTransformValues();
 			_scaleX = scale;
-
 			invalidateTransform();
 		}
 
@@ -545,10 +541,8 @@ package away3d.core.base
 
 		public function set scaleY(scale : Number) : void
 		{
-			if (scaleY == scale) return;
-
+			if (_scaleValuesDirty) updateTransformValues();
 			_scaleY = scale;
-
 			invalidateTransform();
 		}
 
@@ -563,12 +557,8 @@ package away3d.core.base
 
 		public function set scaleZ(scale : Number) : void
 		{
-			if (scaleZ == scale) return;
-
+			if (_scaleValuesDirty) updateTransformValues();
 			_scaleZ = scale;
-
-			_transformDirty = true;
-
 			invalidateTransform();
 		}
 
@@ -635,33 +625,22 @@ package away3d.core.base
 
 		private function updateTransformValues() : void
 		{
-			var raw : Vector.<Number>;
-			var rot : Vector3D;
-			var x : Number, y : Number, z : Number;
+			var elements : Vector.<Vector3D> = _transform.decompose();
+			var vec : Vector3D;
 
 			if (_rotationValuesDirty) {
-				rot = Vector3DUtils.matrix2euler(_transform);
-				_rotationX = rot.x;
-				_rotationY = rot.y;
-				_rotationZ = rot.z;
+				vec = elements[1];
+				_rotationX = vec.x;
+				_rotationY = vec.y;
+				_rotationZ = vec.z;
 				_rotationValuesDirty = false;
 			}
 
 			if (_scaleValuesDirty) {
-				raw = Matrix3DUtils.RAW_DATA_CONTAINER;
-				_transform.copyRawDataTo(raw);
-				x = raw[uint(0)];
-				y = raw[uint(1)];
-				z = raw[uint(2)];
-				_scaleX = Math.sqrt(x * x + y * y + z * z);
-				x = raw[uint(4)];
-				y = raw[uint(5)];
-				z = raw[uint(6)];
-				_scaleY = Math.sqrt(x * x + y * y + z * z);
-				x = raw[uint(8)];
-				y = raw[uint(9)];
-				z = raw[uint(10)];
-				_scaleZ = Math.sqrt(x * x + y * y + z * z);
+				vec = elements[2];
+				_scaleX = vec.x;
+				_scaleY = vec.y;
+				_scaleZ = vec.z;
 				_scaleValuesDirty = false;
 			}
 		}
