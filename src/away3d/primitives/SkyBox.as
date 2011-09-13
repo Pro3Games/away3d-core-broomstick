@@ -165,7 +165,7 @@ package away3d.primitives
 			var mvp : Matrix3D = _mvpTransformStack[_mvpIndex];
 			mvp.identity();
 			mvp.appendScale(size, size, size);
-			mvp.appendTranslation(camera.x, camera.y, camera.z);
+			mvp.appendTranslation(camera.scenePosition.x, camera.scenePosition.y, camera.scenePosition.z);
 			mvp.append(camera.renderToTextureProjection);
 		}
 
