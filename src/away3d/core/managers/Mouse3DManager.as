@@ -35,7 +35,7 @@ package away3d.core.managers
 
 		private static var _mouseClick : MouseEvent3D = new MouseEvent3D(MouseEvent3D.CLICK);
 		private static var _mouseDoubleClick : MouseEvent3D = new MouseEvent3D(MouseEvent3D.DOUBLE_CLICK);
-		private static var _mouseMove : MouseEvent3D = new MouseEvent3D(MouseEvent3D.MOUSE_MOVE);
+//		private static var _mouseMove : MouseEvent3D = new MouseEvent3D(MouseEvent3D.MOUSE_MOVE);
 		private static var _mouseOver : MouseEvent3D = new MouseEvent3D(MouseEvent3D.MOUSE_OVER);
 		private static var _mouseOut : MouseEvent3D = new MouseEvent3D(MouseEvent3D.MOUSE_OUT);
 		private static var _mouseUp : MouseEvent3D = new MouseEvent3D(MouseEvent3D.MOUSE_UP);
@@ -64,7 +64,7 @@ package away3d.core.managers
 			_view.addEventListener(MouseEvent.CLICK, onClick);
 			_view.addEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
 			_view.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			_view.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);	// mark moves as most important
+//			_view.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);	// mark moves as most important
 			_view.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 			_view.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 		}
@@ -79,11 +79,11 @@ package away3d.core.managers
 			_forceMouseMove = value;
 		}
 
-		private function onMouseMove(event : MouseEvent) : void
-		{
-			if (!_forceMouseMove)
-				queueDispatch(_mouseMove, event);
-		}
+//		private function onMouseMove(event : MouseEvent) : void
+//		{
+//			if (!_forceMouseMove)
+//				queueDispatch(_mouseMove, event);
+//		}
 
 
 		arcane function get stage3DProxy() : Stage3DProxy
@@ -105,7 +105,7 @@ package away3d.core.managers
 			_view.removeEventListener(MouseEvent.CLICK, onClick);
 			_view.removeEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
 			_view.removeEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			_view.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+//			_view.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 			_view.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 			_view.removeEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 		}
@@ -176,7 +176,7 @@ package away3d.core.managers
 		 */
 		private function getObjectHitData() : void
 		{
-			if (!_forceMouseMove && _queuedEvents.length == 0)
+			if (/*!_forceMouseMove && */_queuedEvents.length == 0)
 				return;
 
 			_previousActiveObject = _activeObject;
@@ -255,7 +255,7 @@ package away3d.core.managers
 				if (_activeRenderable) queueDispatch(_mouseOver, _mouseMoveEvent, _activeRenderable);
 			}
 
-			if (_forceMouseMove && _activeRenderable) {
+			if (/*_forceMouseMove && */_activeRenderable) {
 				var localX : Number;
 				var localY : Number;
 				var localZ : Number;
@@ -270,7 +270,7 @@ package away3d.core.managers
 				}
 
 				if ((localX != _oldLocalX) || (localY != _oldLocalY) || (localZ != _oldLocalZ)) {
-					queueDispatch(_mouseMove, _mouseMoveEvent, _activeRenderable);
+//					queueDispatch(_mouseMove, _mouseMoveEvent, _activeRenderable);
 
 					_oldLocalX = localX;
 					_oldLocalY = localY;
