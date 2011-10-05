@@ -23,6 +23,7 @@ package away3d.loaders.parsers
 	 */
 	public class Max3DSParser extends ParserBase
 	{
+		private var _byteData : ByteArray;
 		private const LIMIT:uint = 64998;
 		private var _startedParsing : Boolean;
 		private var _mesh:Mesh;
@@ -184,7 +185,9 @@ package away3d.loaders.parsers
 		 */
 		protected override function proceedParsing() : Boolean
 		{
+			
 			if(!_startedParsing){
+				_byteData = getByteData();
 				_startedParsing = true;
 				_byteData.position = 0;
 				_byteData.endian = Endian.LITTLE_ENDIAN;
@@ -359,6 +362,8 @@ package away3d.loaders.parsers
 					if(md.materialID == matref.materialID){
 						bmMaterial = BitmapMaterial(matref.mesh.material);
 						bmMaterial.bitmapData = md.bitmapData;
+						finalizeAsset(matref.mesh);
+						finalizeAsset(bmMaterial);
 						/* to do split
 						bmMaterial.ambientMethod = md.ambientColor;
 						bmMaterial.specularMethod = md.specularColor;
@@ -384,9 +389,6 @@ package away3d.loaders.parsers
 					break;
 				}
 			}
-			
-			if(_dependencyCount == 0)
-				buildMaterials();
 		}
 		
 		private function parseMaterial(chunk:Chunk3ds):void
@@ -707,7 +709,7 @@ package away3d.loaders.parsers
 			_mesh = new Mesh(null, _geometry);
 			_mesh.name = meshName;
 			var bitmapMaterial:BitmapMaterial = new BitmapMaterial(defaultBitmapData);
-			bitmapMaterial.name = meshName;
+			bitmapMaterial.name = _materialName;
 			_mesh.material = bitmapMaterial;
 			var newRef:MaterialRef = new MaterialRef();
 			newRef.mesh = _mesh;
@@ -720,7 +722,7 @@ package away3d.loaders.parsers
 			
 			// TODO: I think this is happening too early. Make sure this doesn't
 			// happen until after the entire mesh data has been parsed.
-			finalizeAsset(_mesh);
+			//finalizeAsset(_mesh);
 		}
 		
 		private function readMeshVertices(chunk:Chunk3ds):void
