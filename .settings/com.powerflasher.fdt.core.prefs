@@ -1,4 +1,4 @@
-#Mon Apr 18 17:53:25 CEST 2011
+#Wed Oct 19 11:51:32 CEST 2011
 com.powerflasher.fdt.core.CompatiblePlayers=External_SWF_Viewer\:Browser\:Standalone_Flash_Player
 com.powerflasher.fdt.core.CompilerArguments=-static-link-runtime-shared-libraries\=true\n-target-player\={playerVersion}\n-library-path+\="{flexSDK}/frameworks/locale/en_US"\n-default-size\=550,400
 com.powerflasher.fdt.core.DefaultOutputFolder=bin
@@ -12,5 +12,5 @@ com.powerflasher.fdt.core.PlayerVersion=10.2
 com.powerflasher.fdt.core.ProjectLockedStatus=false
 com.powerflasher.fdt.core.ProjectTypeHint=AS 3
 com.powerflasher.fdt.core.Runtime=Flash_Player
-com.powerflasher.fdt.core.SdkName=Flex Hero
+com.powerflasher.fdt.core.SdkName=Flex 4.5.1
 eclipse.preferences.version=1
