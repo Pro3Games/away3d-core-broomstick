@@ -13,7 +13,7 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<flex.sdk.version>4.5.0.19786-MOLEHILL-071311</flex.sdk.version>
+		<flex.sdk.version>4.5.1.21328-MOLEHILL-11.0</flex.sdk.version>
 		<flexmojos.version>4.0-beta-7</flexmojos.version>
 	</properties>
 	
