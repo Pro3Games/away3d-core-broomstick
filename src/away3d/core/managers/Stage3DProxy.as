@@ -115,7 +115,7 @@ package away3d.core.managers
 			_enableDepthAndStencil = enableDepthAndStencil;
 
 			if (_context3D)
-				_context3D.configureBackBuffer(backBufferWidth, backBufferHeight, antiAlias, enableDepthAndStencil);
+				_context3D.configureBackBuffer(1024, 768, antiAlias, true);
 		}
 
 		public function get enableDepthAndStencil() : Boolean
@@ -222,7 +222,7 @@ package away3d.core.managers
 			if (_stage3D.context3D) {
 				_context3D = _stage3D.context3D;
 				_context3D.enableErrorChecking = true;
-				_context3D.configureBackBuffer(_backBufferWidth, _backBufferHeight, _antiAlias, _enableDepthAndStencil);
+				_context3D.configureBackBuffer(1024, 768, _antiAlias, true);
 				dispatchEvent(new Stage3DEvent(Stage3DEvent.CONTEXT3D_CREATED));
 			}
 			else {
